@@ -38,3 +38,12 @@ resource "kubernetes_namespace" "prod" {
     name = "prod"
   }
 }
+
+terraform {
+  backend "s3" {
+    bucket  = "microservices-state-bucket"
+    key     = "terraform/terraform.tfstate"
+    region  = "us-east-1"
+    encrypt = true
+  }
+}
