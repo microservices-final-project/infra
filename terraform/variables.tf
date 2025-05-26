@@ -25,7 +25,7 @@ variable "dns_prefix" {
 variable "node_count" {
   description = "The number of nodes in the Kubernetes cluster."
   type    = number
-  default = 1
+  default = 3
 }
 
 variable "vm_size" {
