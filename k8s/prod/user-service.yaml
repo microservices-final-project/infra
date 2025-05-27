@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: alejolonber/user-service:test
+          ports:
+            - containerPort: 8700
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "dev"
+            - name: SPRING_ZIPKIN_BASE_URL
+              value: "http://zipkin:9411"
+            - name: EUREKA_CLIENT_REGION
+              value: "default"
+            - name: EUREKA_CLIENT_AVAILABILITYZONES_DEFAULT
+              value: "myzone"
+            - name: EUREKA_CLIENT_SERVICEURL_MYZONE
+              value: "http://service-discovery:8761/eureka"
+            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+              value: "http://service-discovery:8761/eureka"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: prod
+spec:
+  selector:
+    app: user-service
+  ports:
+    - protocol: TCP
+      port: 8700
+      targetPort: 8700
+  type: ClusterIP
