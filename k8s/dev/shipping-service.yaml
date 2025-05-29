@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: shipping-service
-          image: alejolonber/shipping-service:test
+          image: ${ACR_NAME}.azurecr.io/shipping-service:test
           ports:
             - containerPort: 8600
           env:

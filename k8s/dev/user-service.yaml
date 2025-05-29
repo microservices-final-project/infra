@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shipping-service
+  name: user-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: shipping-service
+      app: user-service
   template:
     metadata:
       labels:
-        app: shipping-service
+        app: user-service
     spec:
       containers:
-        - name: shipping-service
-          image: alejolonber/shipping-service:test
+        - name: user-service
+          image: ${ACR_NAME}.azurecr.io/user-service:test
           ports:
-            - containerPort: 8600
+            - containerPort: 8700
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "dev"
@@ -36,12 +36,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: shipping-service
+  name: user-service
 spec:
   selector:
-    app: shipping-service
+    app: user-service
   ports:
     - protocol: TCP
-      port: 8600
-      targetPort: 8600
+      port: 8700
+      targetPort: 8700
   type: ClusterIP
