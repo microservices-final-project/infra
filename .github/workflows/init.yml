@@ -67,7 +67,7 @@ jobs:
 
       - name: Set Organization Secrets for multiple repositories
         run: |
-          repos=("service-discovery", "cloud-config", "api-gateway", "proxy-client", "order-service", "payment-service", "product-service", "shipping-service", "user-service", "favourite-service")
+          repos=("service-discovery" "cloud-config" "api-gateway" "proxy-client" "order-service" "payment-service" "product-service" "shipping-service" "user-service" "favourite-service")
           for repo in "${repos[@]}"; do
             gh secret set DOCKERHUB_TOKEN -b "${{ secrets.DOCKERHUB_TOKEN }}" --repo "microservices-final-project/$repo"
             gh secret set DOCKERHUB_USERNAME -b "${{ secrets.DOCKERHUB_USERNAME }}" --repo "microservices-final-project/$repo"
@@ -85,7 +85,7 @@ jobs:
           done
       - name: Trigger workflows and wait for completion
         run: |
-          repos=("service-discovery", "cloud-config", "api-gateway", "proxy-client", "order-service", "payment-service", "product-service", "shipping-service", "user-service", "favourite-service")
+          repos=("service-discovery" "cloud-config" "api-gateway" "proxy-client" "order-service" "payment-service" "product-service" "shipping-service" "user-service" "favourite-service")
           declare -A run_ids
 
           # Step 1: Trigger workflows and collect run IDs
