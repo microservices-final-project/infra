@@ -33,6 +33,13 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(module.aks.cluster_ca_certificate)
 }
 
+resource "azurerm_role_assignment" "aks_acr_pull" {
+  scope                = azurerm_container_registry.microservices_acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = module.aks.kubelet_identity_object_id
+}
+
+
 resource "kubernetes_namespace" "dev" {
   metadata {
     name = "dev"
