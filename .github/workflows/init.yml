@@ -6,7 +6,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -36,7 +36,6 @@ jobs:
         working-directory: terraform/
         run: terraform apply -auto-approve -var="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}" -var="tenant_id=${{ secrets.AZURE_TENANT_ID }}" -var="client_secret=${{ secrets.AZURE_CLIENT_SECRET }}" -var="client_id=${{ secrets.AZURE_CLIENT_ID }}"
 
-
       - name: Get Terraform Outputs
         id: tf_outputs
         working-directory: terraform/
@@ -52,6 +51,12 @@ jobs:
           echo "acr_admin_password=$(terraform output -raw acr_admin_password)" >> $GITHUB_OUTPUT
           echo "acr_login_server=$(terraform output -raw acr_login_server)" >> $GITHUB_OUTPUT
           echo "resource_group_name=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.CREDS }}
+          auth-type: SERVICE_PRINCIPAL
 
       - name: Assign AcrPull role to Service Principal
         run: |
@@ -158,16 +163,11 @@ jobs:
           done
 
           echo "🎉 All workflows completed."
-      - name: Log in to Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.CREDS }}
-          auth-type: SERVICE_PRINCIPAL
 
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
         with:
-          version: 'latest'
+          version: "latest"
 
       - name: Set up kubectl with AKS credentials
         run: |
