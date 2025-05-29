@@ -18,7 +18,8 @@ resource "azurerm_container_registry" "microservices_acr" {
   name                = "microservicesacr${random_id.acr_suffix.hex}"
   resource_group_name = azurerm_resource_group.microservices_rg.name
   location            = azurerm_resource_group.microservices_rg.location
-  sku                  = "Basic"
+  sku                 = "Basic"
+  admin_enabled       = true
 }
 
 resource "azurerm_role_assignment" "aks_acr_pull" {
@@ -29,14 +30,14 @@ resource "azurerm_role_assignment" "aks_acr_pull" {
 
 
 module "aks" {
-  source              = "./modules/aks"
-  cluster_name        = var.cluster_name
-  location            = azurerm_resource_group.microservices_rg.location
-  resource_group_name = azurerm_resource_group.microservices_rg.name
-  dns_prefix          = var.dns_prefix
-  node_count          = var.node_count
-  vm_size             = var.vm_size
-  tags                = var.tags
+  source                    = "./modules/aks"
+  cluster_name              = var.cluster_name
+  location                  = azurerm_resource_group.microservices_rg.location
+  resource_group_name       = azurerm_resource_group.microservices_rg.name
+  dns_prefix                = var.dns_prefix
+  node_count                = var.node_count
+  vm_size                   = var.vm_size
+  tags                      = var.tags
   user_assigned_identity_id = azurerm_user_assigned_identity.identity.id
 
 }
