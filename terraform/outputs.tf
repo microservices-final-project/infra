@@ -5,7 +5,7 @@ output "resource_group_name" {
 
 output "aks_cluster_name" {
   description = "The name of the AKS cluster"
-  value       = module.aks.cluster_name
+  value       = module.aks.aks_cluster_name
 }
 
 output "aks_host" {
