@@ -33,10 +33,16 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(module.aks.cluster_ca_certificate)
 }
 
+resource "azurerm_user_assigned_identity" "identity" {
+  name                = "aca-identity"
+  resource_group_name = azurerm_resource_group.microservices_rg.name
+  location            = azurerm_resource_group.microservices_rg.location
+}
+
 resource "azurerm_role_assignment" "aks_acr_pull" {
   scope                = azurerm_container_registry.microservices_acr.id
   role_definition_name = "AcrPull"
-  principal_id         = module.aks.kubelet_identity_object_id
+  principal_id         = azurerm_user_assigned_identity.identity.principal_id
 }
 
 
