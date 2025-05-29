@@ -1,6 +1,24 @@
+resource "random_id" "acr_suffix" {
+  byte_length = 4
+}
+
 resource "azurerm_resource_group" "main" {
   name     = var.resource_group_name
   location = var.location
+}
+
+resource "azurerm_container_registry" "microservices_acr" {
+  name                = "microservicesacr${random_id.acr_suffix.hex}"
+  resource_group_name = azurerm_resource_group.microservices_rg.name
+  location            = azurerm_resource_group.microservices_rg.location
+  sku                  = "Basic"
+  admin_enabled       = true
+}
+
+resource "azurerm_role_assignment" "acr_pull_permission" {
+  principal_id         = azurerm_user_assigned_identity.aca_identity.principal_id
+  role_definition_name = "AcrPull"
+  scope                = azurerm_container_registry.microservices_acr.id
 }
 
 module "aks" {

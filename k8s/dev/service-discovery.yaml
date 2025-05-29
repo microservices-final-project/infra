@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: service-discovery
-          image: alejolonber/service-discovery:test
+          image: ${ACR_NAME}.azurecr.io/service-discovery:test
           ports:
             - containerPort: 8761
           env:

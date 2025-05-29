@@ -45,3 +45,127 @@ jobs:
           echo "aks_client_certificate=$(terraform output -raw aks_client_certificate)" >> $GITHUB_OUTPUT
           echo "aks_client_key=$(terraform output -raw aks_client_key)" >> $GITHUB_OUTPUT
           echo "aks_cluster_ca_certificate=$(terraform output -raw aks_cluster_ca_certificate)" >> $GITHUB_OUTPUT
+          echo "aks_cluster_name=$(terraform output -raw aks_cluster_name)" >> $GITHUB_OUTPUT
+
+          echo "acr_name=$(terraform output -raw acr_name)" >> $GITHUB_OUTPUT
+          echo "acr_admin_username=$(terraform output -raw acr_admin_username)" >> $GITHUB_OUTPUT
+          echo "acr_admin_password=$(terraform output -raw acr_admin_password)" >> $GITHUB_OUTPUT
+          echo "acr_login_server=$(terraform output -raw acr_login_server)" >> $GITHUB_OUTPUT
+          echo "resource_group_name=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
+
+      - name: Install GitHub CLI
+        run: sudo apt-get install gh -y
+
+      - name: Authenticate with GitHub CLI
+        run: echo "${{ secrets.GH_PAT }}" | gh auth login --with-token
+
+      - name: Set Terraform outputs as environment variables
+        run: |
+          echo "ACR_NAME=${{ steps.tf_outputs.outputs.acr_name }}" >> $GITHUB_ENV
+          echo "DOCKER_USERNAME=${{ steps.tf_outputs.outputs.acr_admin_username }}" >> $GITHUB_ENV
+          echo "DOCKER_PASSWORD=${{ steps.tf_outputs.outputs.acr_admin_password }}" >> $GITHUB_ENV
+
+      - name: Set Organization Secrets for multiple repositories
+        run: |
+          repos=("service-discovery", "cloud-config", "api-gateway", "proxy-client", "order-service", "payment-service", "product-service", "shipping-service", "user-service", "favourite-service")
+          for repo in "${repos[@]}"; do
+            gh secret set DOCKERHUB_TOKEN -b "${{ secrets.DOCKERHUB_TOKEN }}" --repo "microservices-final-project/$repo"
+            gh secret set DOCKERHUB_USERNAME -b "${{ secrets.DOCKERHUB_USERNAME }}" --repo "microservices-final-project/$repo"
+            gh secret set ACR_NAME -b "${{ env.ACR_NAME }}" --repo "microservices-final-project/$repo"
+            gh secret set DOCKER_USERNAME -b "${{ env.DOCKER_USERNAME }}" --repo "microservices-final-project/$repo"
+            gh secret set DOCKER_PASSWORD -b "${{ env.DOCKER_PASSWORD }}" --repo "microservices-final-project/$repo"
+            gh secret set AZURE_CLIENT_ID -b "${{ secrets.AZURE_CLIENT_ID }}" --repo "microservices-final-project/$repo"
+            gh secret set AZURE_TENANT_ID -b "${{ secrets.AZURE_TENANT_ID }}" --repo "microservices-final-project/$repo"
+            gh secret set AZURE_SUBSCRIPTION_ID -b "${{ secrets.AZURE_SUBSCRIPTION_ID }}" --repo "microservices-final-project/$repo"
+            gh secret set AZURE_CLIENT_SECRET -b "${{ secrets.AZURE_CLIENT_SECRET }}" --repo "microservices-final-project/$repo"
+            gh secret set RESOURCE_GROUP -b "${{ steps.tf_outputs.outputs.resource_group_name }}" --repo "microservices-final-project/$repo"
+            gh secret set CREDS -b "${{ secrets.CREDS }}" --repo "microservices-final-project/$repo"
+            gh secret set ACR_NAME -b "${{ env.ACR_NAME }}" --repo "${{ github.repository }}"
+
+          done
+      - name: Trigger workflows and wait for completion
+        run: |
+          repos=("service-discovery", "cloud-config", "api-gateway", "proxy-client", "order-service", "payment-service", "product-service", "shipping-service", "user-service", "favourite-service")
+          declare -A run_ids
+
+          # Step 1: Trigger workflows and collect run IDs
+          for repo in "${repos[@]}"; do
+            echo "🚀 Triggering build.yml in $repo..."
+            gh workflow run build.yml \
+              --ref main \
+              --repo microservices-final-project/$repo
+
+            # Small delay to allow the run to register
+            sleep 5
+
+            # Get the latest run ID for build.yml
+            run_id=$(gh run list \
+              --repo microservices-final-project/$repo \
+              --workflow=build.yml \
+              --branch=main \
+              --limit 1 \
+              --json databaseId \
+              --jq '.[0].databaseId')
+
+            if [[ -n "$run_id" ]]; then
+              run_ids[$repo]=$run_id
+              echo "✅ $repo run ID: $run_id"
+            else
+              echo "❌ Could not get run ID for $repo"
+            fi
+          done
+
+          echo ""
+          echo "⏳ Waiting for workflows to complete..."
+          all_done=false
+
+          # Step 2: Poll until all runs are completed
+          while [ "$all_done" == "false" ]; do
+            all_done=true
+            for repo in "${!run_ids[@]}"; do
+              run_id=${run_ids[$repo]}
+              status=$(gh run view "$run_id" \
+                --repo microservices-final-project/$repo \
+                --json status,conclusion \
+                --jq '.status')
+
+              if [[ "$status" != "completed" ]]; then
+                echo "⏱️  $repo is still running..."
+                all_done=false
+              else
+                conclusion=$(gh run view "$run_id" \
+                  --repo microservices-final-project/$repo \
+                  --json status,conclusion \
+                  --jq '.conclusion')
+                echo "✅ $repo finished with status: $conclusion"
+              fi
+            done
+
+            if [ "$all_done" == "false" ]; then
+              echo "🔁 Waiting 15s before next check..."
+              sleep 15
+            fi
+          done
+
+          echo "🎉 All workflows completed."
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.CREDS }}
+          auth-type: SERVICE_PRINCIPAL
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Set up kubectl with AKS credentials
+        run: |
+          az aks get-credentials --resource-group ${{ steps.tf_outputs.outputs.resource_group_name }} --name ${{ steps.tf_outputs.outputs.aks_cluster_name }} --overwrite-existing
+
+      - name: Replace ACR_NAME and Deploy to AKS
+        run: |
+          export ACR_NAME=${{ env.ACR_NAME }}
+          for file in ./k8s/dev/*.yaml; do
+            envsubst < "$file" | kubectl apply -f -
+          done

@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: shipping-service
+  name: proxy-client
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: shipping-service
+      app: proxy-client
   template:
     metadata:
       labels:
-        app: shipping-service
+        app: proxy-client
     spec:
       containers:
-        - name: shipping-service
-          image: alejolonber/shipping-service:test
+        - name: proxy-client
+          image: ${ACR_NAME}.azurecr.io/proxy-client:test
           ports:
-            - containerPort: 8600
+            - containerPort: 8900
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "dev"
@@ -36,12 +36,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: shipping-service
+  name: proxy-client
 spec:
   selector:
-    app: shipping-service
+    app: proxy-client
   ports:
     - protocol: TCP
-      port: 8600
-      targetPort: 8600
+      port: 8900
+      targetPort: 8900
   type: ClusterIP
