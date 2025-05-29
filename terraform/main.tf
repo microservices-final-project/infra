@@ -24,6 +24,8 @@ module "aks" {
   node_count          = var.node_count
   vm_size             = var.vm_size
   tags                = var.tags
+  user_assigned_identity_id = azurerm_user_assigned_identity.identity.id
+
 }
 
 provider "kubernetes" {
