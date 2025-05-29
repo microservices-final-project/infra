@@ -18,8 +18,8 @@ resource "azurerm_container_registry" "microservices_acr" {
 module "aks" {
   source              = "./modules/aks"
   cluster_name        = var.cluster_name
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.microservices_rg.location
+  resource_group_name = azurerm_resource_group.microservices_rg.name
   dns_prefix          = var.dns_prefix
   node_count          = var.node_count
   vm_size             = var.vm_size
