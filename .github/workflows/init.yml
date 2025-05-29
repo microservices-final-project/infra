@@ -53,6 +53,16 @@ jobs:
           echo "acr_login_server=$(terraform output -raw acr_login_server)" >> $GITHUB_OUTPUT
           echo "resource_group_name=$(terraform output -raw resource_group_name)" >> $GITHUB_OUTPUT
 
+      - name: Assign AcrPull role to Service Principal
+        run: |
+          az role assignment create \
+            --assignee $AZURE_CLIENT_ID \
+            --role AcrPull \
+            --scope /subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups=${{ steps.tf_outputs.outputs.resource_group_name }}/providers/Microsoft.ContainerRegistry/registries/${{ steps.tf_outputs.outputs.acr_name }}
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
       - name: Install GitHub CLI
         run: sudo apt-get install gh -y
 
