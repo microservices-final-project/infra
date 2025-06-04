@@ -64,18 +64,11 @@ jobs:
       - name: Authenticate with GitHub CLI
         run: echo "${{ secrets.GH_PAT }}" | gh auth login --with-token
 
-      - name: Set Terraform outputs as environment variables
-        run: |
-          echo "ACR_NAME=${{ steps.tf_outputs.outputs.acr_name }}" >> $GITHUB_ENV
-          echo "DOCKER_USERNAME=${{ steps.tf_outputs.outputs.acr_admin_username }}" >> $GITHUB_ENV
-          echo "DOCKER_PASSWORD=${{ steps.tf_outputs.outputs.acr_admin_password }}" >> $GITHUB_ENV
-
       - name: Set Organization Secrets for multiple repositories
         run: |
-            gh secret set ACR_NAME --org microservices-final-project -b "${{ env.ACR_NAME }}" --visibility "all"    
-            gh secret set DOCKER_USERNAME --org microservices-final-project -b "${{ env.DOCKER_USERNAME }}" --visibility "all" 
-            gh secret set DOCKER_PASSWORD --org microservices-final-project -b "${{ env.DOCKER_PASSWORD }}" --visibility "all"       
-            gh secret set RESOURCE_GROUP --org microservices-final-project -b "${{ steps.tf_outputs.outputs.resource_group_name }}" --visibility "all"       
+            gh secret set ACR_NAME --org microservices-final-project -b "${{ steps.tf_outputs.outputs.acr_name }}" --visibility "all"    
+            gh secret set ACR_USERNAME --org microservices-final-project -b "${{ steps.tf_outputs.outputs.acr_admin_username }}" --visibility "all" 
+            gh secret set ACR_PASSWORD --org microservices-final-project -b "${{ steps.tf_outputs.outputs.acr_admin_password }}" --visibility "all"       
             gh secret set RESOURCE_GROUP --org microservices-final-project -b "${{ steps.tf_outputs.outputs.resource_group_name }}" --visibility "all"       
 
       - name: Trigger workflows and wait for completion
@@ -162,7 +155,7 @@ jobs:
 
       - name: Deploy Zipkin, Service Discovery, and Cloud Config
         run: |
-          export ACR_NAME=${{ env.ACR_NAME }}
+          export ACR_NAME={{ steps.tf_outputs.outputs.acr_name }}
 
           for file in zipkin.yaml service-discovery.yaml cloud-config.yaml; do
             envsubst < ./k8s/dev/$file | kubectl apply -f -
@@ -173,7 +166,7 @@ jobs:
 
       - name: Deploy Remaining Services
         run: |
-          export ACR_NAME=${{ env.ACR_NAME }}
+          export ACR_NAME=${{ steps.tf_outputs.outputs.acr_name }}
 
           for file in ./k8s/dev/*.yaml; do
             if [[ "$file" != *"zipkin.yaml" && "$file" != *"service-discovery.yaml" && "$file" != *"cloud-config.yaml" ]]; then
