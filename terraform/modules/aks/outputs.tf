@@ -18,8 +18,3 @@ output "aks_cluster_name" {
   description = "The name of the AKS cluster"
   value       = azurerm_kubernetes_cluster.aks.name
 }
-
-output "kubelet_identity_object_id" {
-  description = "Object ID of the AKS cluster's kubelet managed identity"
-  value       = azurerm_kubernetes_cluster.aks.kubelet_identity[0].object_id
-}

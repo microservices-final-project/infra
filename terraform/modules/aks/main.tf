@@ -11,9 +11,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   identity {
-  type         = "UserAssigned"
-  identity_ids = [var.user_assigned_identity_id]
-}
+    type = "SystemAssigned"
+  }
 
   tags = var.tags
 }
