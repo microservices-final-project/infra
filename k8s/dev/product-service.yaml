@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: product-service
-          image: ${ACR_NAME}.azurecr.io/product-service:test
+          image: ${ACR_NAME}.azurecr.io/product-service:dev
           ports:
             - containerPort: 8500
           env:

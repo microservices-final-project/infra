@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: proxy-client
-          image: ${ACR_NAME}.azurecr.io/proxy-client:test
+          image: ${ACR_NAME}.azurecr.io/proxy-client:dev
           ports:
             - containerPort: 8900
           env:

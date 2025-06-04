@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: user-service
-          image: ${ACR_NAME}.azurecr.io/user-service:test
+          image: ${ACR_NAME}.azurecr.io/user-service:dev
           ports:
             - containerPort: 8700
           env:

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: ${ACR_NAME}.azurecr.io/api-gateway:test
+          image: ${ACR_NAME}.azurecr.io/api-gateway:dev
           ports:
             - containerPort: 8080
           env:
