@@ -162,7 +162,7 @@ jobs:
       - name: Set up kubectl with AKS credentials
         run: |
           az aks get-credentials --resource-group ${{ steps.tf_outputs.outputs.resource_group_name }} --name ${{ steps.tf_outputs.outputs.aks_cluster_name }} --overwrite-existing
-          
+
       - name: Attach ACR to AKS
         run: |
           az aks update \
@@ -170,9 +170,23 @@ jobs:
             --name ${{ steps.tf_outputs.outputs.aks_cluster_name }} \
             --attach-acr ${{ steps.tf_outputs.outputs.acr_name }}
 
-      - name: Replace ACR_NAME and Deploy to AKS
+      - name: Deploy Zipkin, Service Discovery, and Cloud Config
         run: |
           export ACR_NAME=${{ env.ACR_NAME }}
+
+          for file in zipkin.yaml service-discovery.yaml cloud-config.yaml; do
+            envsubst < ./k8s/dev/$file | kubectl apply -f -
+          done
+
+          echo "⏳ Esperando a que los servicios iniciales estén listos..."
+          sleep 60
+
+      - name: Deploy Remaining Services
+        run: |
+          export ACR_NAME=${{ env.ACR_NAME }}
+
           for file in ./k8s/dev/*.yaml; do
-            envsubst < "$file" | kubectl apply -f -
+            if [[ "$file" != *"zipkin.yaml" && "$file" != *"service-discovery.yaml" && "$file" != *"cloud-config.yaml" ]]; then
+              envsubst < "$file" | kubectl apply -f -
+            fi
           done
