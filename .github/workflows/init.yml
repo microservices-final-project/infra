@@ -72,22 +72,12 @@ jobs:
 
       - name: Set Organization Secrets for multiple repositories
         run: |
-          repos=("service-discovery" "cloud-config" "api-gateway" "proxy-client" "order-service" "payment-service" "product-service" "shipping-service" "user-service" "favourite-service")
-          for repo in "${repos[@]}"; do
-            gh secret set DOCKERHUB_TOKEN -b "${{ secrets.DOCKERHUB_TOKEN }}" --repo "microservices-final-project/$repo"
-            gh secret set DOCKERHUB_USERNAME -b "${{ secrets.DOCKERHUB_USERNAME }}" --repo "microservices-final-project/$repo"
-            gh secret set ACR_NAME -b "${{ env.ACR_NAME }}" --repo "microservices-final-project/$repo"
-            gh secret set DOCKER_USERNAME -b "${{ env.DOCKER_USERNAME }}" --repo "microservices-final-project/$repo"
-            gh secret set DOCKER_PASSWORD -b "${{ env.DOCKER_PASSWORD }}" --repo "microservices-final-project/$repo"
-            gh secret set AZURE_CLIENT_ID -b "${{ secrets.AZURE_CLIENT_ID }}" --repo "microservices-final-project/$repo"
-            gh secret set AZURE_TENANT_ID -b "${{ secrets.AZURE_TENANT_ID }}" --repo "microservices-final-project/$repo"
-            gh secret set AZURE_SUBSCRIPTION_ID -b "${{ secrets.AZURE_SUBSCRIPTION_ID }}" --repo "microservices-final-project/$repo"
-            gh secret set AZURE_CLIENT_SECRET -b "${{ secrets.AZURE_CLIENT_SECRET }}" --repo "microservices-final-project/$repo"
-            gh secret set RESOURCE_GROUP -b "${{ steps.tf_outputs.outputs.resource_group_name }}" --repo "microservices-final-project/$repo"
-            gh secret set CREDS -b "${{ secrets.CREDS }}" --repo "microservices-final-project/$repo"
-            gh secret set ACR_NAME -b "${{ env.ACR_NAME }}" --repo "${{ github.repository }}"
+            gh secret set ACR_NAME --org microservices-final-project -b "${{ env.ACR_NAME }}" --visibility "all"    
+            gh secret set DOCKER_USERNAME --org microservices-final-project -b "${{ env.DOCKER_USERNAME }}" --visibility "all" 
+            gh secret set DOCKER_PASSWORD --org microservices-final-project -b "${{ env.DOCKER_PASSWORD }}" --visibility "all"       
+            gh secret set RESOURCE_GROUP --org microservices-final-project -b "${{ steps.tf_outputs.outputs.resource_group_name }}" --visibility "all"       
+            gh secret set RESOURCE_GROUP --org microservices-final-project -b "${{ steps.tf_outputs.outputs.resource_group_name }}" --visibility "all"       
 
-          done
       - name: Trigger workflows and wait for completion
         run: |
           repos=("service-discovery" "cloud-config" "api-gateway" "proxy-client" "order-service" "payment-service" "product-service" "shipping-service" "user-service" "favourite-service")
