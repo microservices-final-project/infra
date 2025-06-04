@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: order-service
-          image: ${ACR_NAME}.azurecr.io/order-service:test
+          image: ${ACR_NAME}.azurecr.io/order-service:dev
           ports:
             - containerPort: 8300
           env:

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: payment-service
-          image: ${ACR_NAME}.azurecr.io/payment-service:test
+          image: ${ACR_NAME}.azurecr.io/payment-service:dev
           ports:
             - containerPort: 8400
           env:

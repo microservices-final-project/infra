@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: cloud-config
-          image: ${ACR_NAME}.azurecr.io/cloud-config:test
+          image: ${ACR_NAME}.azurecr.io/cloud-config:dev
           ports:
             - containerPort: 9296
           env:

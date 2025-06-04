@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: favourite-service
-          image: ${ACR_NAME}.azurecr.io/favourite-service:test
+          image: ${ACR_NAME}.azurecr.io/favourite-service:dev
           ports:
             - containerPort: 8800
           env:
