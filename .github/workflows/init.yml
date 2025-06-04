@@ -161,7 +161,7 @@ jobs:
 
       - name: Deploy Zipkin, Service Discovery, and Cloud Config
         run: |
-          export ACR_NAME={{ steps.tf_outputs.outputs.acr_name }}
+          export ACR_NAME=${{ steps.tf_outputs.outputs.acr_name }}
 
           for file in zipkin.yaml service-discovery.yaml cloud-config.yaml; do
             envsubst < ./k8s/dev/$file | kubectl apply -f -
