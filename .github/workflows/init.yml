@@ -58,16 +58,6 @@ jobs:
           creds: ${{ secrets.CREDS }}
           auth-type: SERVICE_PRINCIPAL
 
-      - name: Assign AcrPull role to Service Principal
-        run: |
-          az role assignment create \
-            --assignee $AZURE_CLIENT_ID \
-            --role AcrPull \
-            --scope /subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/${{ steps.tf_outputs.outputs.resource_group_name }}/providers/Microsoft.ContainerRegistry/registries/${{ steps.tf_outputs.outputs.acr_name }}
-        env:
-          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
       - name: Install GitHub CLI
         run: sudo apt-get install gh -y
 
@@ -172,6 +162,13 @@ jobs:
       - name: Set up kubectl with AKS credentials
         run: |
           az aks get-credentials --resource-group ${{ steps.tf_outputs.outputs.resource_group_name }} --name ${{ steps.tf_outputs.outputs.aks_cluster_name }} --overwrite-existing
+          
+      - name: Attach ACR to AKS
+        run: |
+          az aks update \
+            --resource-group ${{ steps.tf_outputs.outputs.resource_group_name }} \
+            --name ${{ steps.tf_outputs.outputs.aks_cluster_name }} \
+            --attach-acr ${{ steps.tf_outputs.outputs.acr_name }}
 
       - name: Replace ACR_NAME and Deploy to AKS
         run: |
