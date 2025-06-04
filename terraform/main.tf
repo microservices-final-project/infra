@@ -7,25 +7,12 @@ resource "azurerm_resource_group" "microservices_rg" {
   location = var.location
 }
 
-resource "azurerm_user_assigned_identity" "identity" {
-  name                = "identity"
-  resource_group_name = azurerm_resource_group.microservices_rg.name
-  location            = azurerm_resource_group.microservices_rg.location
-}
-
-
 resource "azurerm_container_registry" "microservices_acr" {
   name                = "microservicesacr${random_id.acr_suffix.hex}"
   resource_group_name = azurerm_resource_group.microservices_rg.name
   location            = azurerm_resource_group.microservices_rg.location
   sku                 = "Basic"
   admin_enabled       = true
-}
-
-resource "azurerm_role_assignment" "aks_acr_pull" {
-  scope                = azurerm_container_registry.microservices_acr.id
-  role_definition_name = "AcrPull"
-  principal_id         = azurerm_user_assigned_identity.identity.principal_id
 }
 
 
@@ -47,24 +34,6 @@ provider "kubernetes" {
   client_certificate     = base64decode(module.aks.client_certificate)
   client_key             = base64decode(module.aks.client_key)
   cluster_ca_certificate = base64decode(module.aks.cluster_ca_certificate)
-}
-
-resource "kubernetes_namespace" "dev" {
-  metadata {
-    name = "dev"
-  }
-}
-
-resource "kubernetes_namespace" "stage" {
-  metadata {
-    name = "stage"
-  }
-}
-
-resource "kubernetes_namespace" "prod" {
-  metadata {
-    name = "prod"
-  }
 }
 
 terraform {
