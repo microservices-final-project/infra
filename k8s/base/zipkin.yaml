@@ -78,7 +78,7 @@ metadata:
     io.kompose.service: zipkin
   name: zipkin
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - name: "9411"
       port: 9411
