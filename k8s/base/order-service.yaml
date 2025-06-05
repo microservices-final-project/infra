@@ -21,7 +21,7 @@ spec:
       containers:
         - env:
             - name: SPRING_CONFIG_IMPORT
-              value: optional:configserver:http://cloud-config.dev.svc.cluster.local:9296/
+              value: optional:configserver:http://cloud-config:9296/
             - name: EUREKA_INSTANCE_HOSTNAME
               value: order-service
           envFrom:
