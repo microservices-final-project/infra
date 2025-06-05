@@ -80,7 +80,7 @@ jobs:
       - name: Trigger workflows for multiple branches and wait for completion
         run: |
           repos=("service-discovery" "cloud-config" "api-gateway" "proxy-client" "order-service" "payment-service" "product-service" "shipping-service" "user-service" "favourite-service")
-          branches=("main" "stage" "develop")
+          branches=("develop")
           declare -A run_ids
 
           for branch in "${branches[@]}"; do
