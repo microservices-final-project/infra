@@ -24,7 +24,7 @@ spec:
       containers:
         - env:
             - name: EUREKA_INSTANCE
-              value: service-discovery.dev.svc.cluster.local
+              value: service-discovery
             - name: EUREKA_INSTANCE_HOSTNAME
               value: service-discovery
           envFrom:
