@@ -57,13 +57,13 @@ module "aks" {
     # }
 
   }
-  location            = each.location
-  cluster_name        = each.cluster_name
+  location            = each.value.location
+  cluster_name        = each.value.cluster_name
   resource_group_name = azurerm_resource_group.microservices_rg.name
-  dns_prefix          = each.dns_prefix
-  node_count          = each.node_count
-  vm_size             = each.vm_size
-  tags                = each.tags
+  dns_prefix          = each.value.dns_prefix
+  node_count          = each.value.node_count
+  vm_size             = each.value.vm_size
+  tags                = each.value.tags
 }
 
 provider "kubernetes" {
