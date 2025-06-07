@@ -28,7 +28,7 @@ spec:
             - configMapRef:
                 name: common-environment-variables
           name: proxy-client
-          image: ${ACR_NAME}.azurecr.io/proxy-client:dev
+          image: ${ACR_NAME}.azurecr.io/proxy-client:${ENV}
           ports:
             - containerPort: 8900
           resources:

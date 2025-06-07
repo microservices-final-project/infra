@@ -15,16 +15,55 @@ resource "azurerm_container_registry" "microservices_acr" {
   admin_enabled       = true
 }
 
-
 module "aks" {
-  source                    = "./modules/aks"
-  cluster_name              = var.cluster_name
-  location                  = azurerm_resource_group.microservices_rg.location
-  resource_group_name       = azurerm_resource_group.microservices_rg.name
-  dns_prefix                = var.dns_prefix
-  node_count                = var.node_count
-  vm_size                   = var.vm_size
-  tags                      = var.tags
+
+  source = "./modules/aks"
+
+  for_each = {
+
+    dev = {
+      location     = "West US"
+      cluster_name = "${var.cluster_name}-dev"
+      dns_prefix   = "${var.dns_prefix}-dev"
+      node_count   = 2
+      vm_size      = "Standard_B2s"
+      tags = {
+        environment = "dev"
+        project     = "microservices"
+      }
+    }
+
+    stage = {
+      location     = "East US"
+      cluster_name = "${var.cluster_name}-stage"
+      dns_prefix   = "${var.dns_prefix}-stage"
+      node_count   = 2
+      vm_size      = "Standard_B2s"
+      tags = {
+        environment = "stage"
+        project     = "microservices"
+      }
+    }
+
+    # prod = {
+    #   cluster_name = "${var.cluster_name}-prod"
+    #   dns_prefix   = "${var.dns_prefix}-prod"
+    #   node_count   = 2
+    #   vm_size      = "Standard_DS2_v2"
+    #   tags = {
+    #     environment = "prod"
+    #     project     = "microservices"
+    #   }
+    # }
+
+  }
+  location            = each.location
+  cluster_name        = each.cluster_name
+  resource_group_name = azurerm_resource_group.microservices_rg.name
+  dns_prefix          = each.dns_prefix
+  node_count          = each.node_count
+  vm_size             = each.vm_size
+  tags                = eacb.tags
 }
 
 provider "kubernetes" {

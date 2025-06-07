@@ -27,7 +27,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: common-environment-variables
-          image: ${ACR_NAME}.azurecr.io/favourite-service:dev
+          image: ${ACR_NAME}.azurecr.io/favourite-service:${ENV}
           name: favourite-service
           ports:
             - containerPort: 8800

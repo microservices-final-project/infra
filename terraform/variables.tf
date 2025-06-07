@@ -22,27 +22,6 @@ variable "dns_prefix" {
   default = "microservices"
 }
 
-variable "node_count" {
-  description = "The number of nodes in the Kubernetes cluster."
-  type    = number
-  default = 2
-}
-
-variable "vm_size" {
-  description = "The size of the virtual machines in the Kubernetes cluster."
-  type = string
-  default = "Standard_B2s"
-}
-
-variable "tags" {
-  description = "Tags to apply to the resources."
-  type    = map(string)
-  default = {
-    env  = "multi"
-    team = "backend"
-  }
-}
-
 variable "subscription_id" {
   description = "The ID of the Azure subscription where the resources will be created."
   type        = string

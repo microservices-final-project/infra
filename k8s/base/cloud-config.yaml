@@ -25,7 +25,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: common-environment-variables
-          image: ${ACR_NAME}.azurecr.io/cloud-config:dev
+          image: ${ACR_NAME}.azurecr.io/cloud-config:${ENV}
           name: cloud-config
           ports:
             - containerPort: 9296
