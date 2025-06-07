@@ -27,7 +27,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: common-environment-variables
-          image: ${ACR_NAME}.azurecr.io/shipping-service:dev
+          image: ${ACR_NAME}.azurecr.io/shipping-service:${ENV}
           name: shipping-service
           ports:
             - containerPort: 8600

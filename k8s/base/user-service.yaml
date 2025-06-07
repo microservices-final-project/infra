@@ -27,7 +27,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: common-environment-variables
-          image: ${ACR_NAME}.azurecr.io/user-service:dev
+          image: ${ACR_NAME}.azurecr.io/user-service:${ENV}
           name: user-service
           ports:
             - containerPort: 8700

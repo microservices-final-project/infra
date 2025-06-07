@@ -27,7 +27,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: common-environment-variables
-          image: ${ACR_NAME}.azurecr.io/payment-service:dev
+          image: ${ACR_NAME}.azurecr.io/payment-service:${ENV}
           name: payment-service
           ports:
             - containerPort: 8400

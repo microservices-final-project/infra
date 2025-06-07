@@ -30,7 +30,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: common-environment-variables
-          image: ${ACR_NAME}.azurecr.io/service-discovery:dev
+          image: ${ACR_NAME}.azurecr.io/service-discovery:${ENV}
           name: service-discovery
           ports:
             - containerPort: 8761

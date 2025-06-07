@@ -27,7 +27,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: common-environment-variables
-          image: ${ACR_NAME}.azurecr.io/api-gateway:dev
+          image: ${ACR_NAME}.azurecr.io/api-gateway:${ENV}
           name: api-gateway
           ports:
             - containerPort: 8080

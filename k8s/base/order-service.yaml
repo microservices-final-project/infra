@@ -27,7 +27,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: common-environment-variables
-          image: ${ACR_NAME}.azurecr.io/order-service:dev
+          image: ${ACR_NAME}.azurecr.io/order-service:${ENV}
           name: order-service
           ports:
             - containerPort: 8300

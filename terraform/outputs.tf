@@ -3,33 +3,49 @@ output "resource_group_name" {
   value       = azurerm_resource_group.microservices_rg.name
 }
 
-output "aks_cluster_name" {
-  description = "The name of the AKS cluster"
-  value       = module.aks.aks_cluster_name
+output "aks_cluster_names" {
+  description = "The names of all AKS clusters"
+  value = {
+    for k, m in module.aks :
+    k => m.aks_cluster_name
+  }
 }
 
-output "aks_host" {
-  description = "The host URL for the AKS cluster"
-  value       = module.aks.host
-  sensitive   = true
+output "aks_hosts" {
+  description = "The host URLs of all AKS clusters"
+  value = {
+    for k, m in module.aks :
+    k => m.host
+  }
+  sensitive = true
 }
 
-output "aks_client_certificate" {
-  description = "The client certificate for the AKS cluster"
-  value       = module.aks.client_certificate
-  sensitive   = true
+
+output "aks_client_certificates" {
+  description = "Client certificates of all AKS clusters"
+  value = {
+    for k, m in module.aks :
+    k => m.client_certificate
+  }
+  sensitive = true
 }
 
-output "aks_client_key" {
-  description = "The client key for the AKS cluster"
-  value       = module.aks.client_key
-  sensitive   = true
+output "aks_client_keys" {
+  description = "Client keys of all AKS clusters"
+  value = {
+    for k, m in module.aks :
+    k => m.client_key
+  }
+  sensitive = true
 }
 
-output "aks_cluster_ca_certificate" {
-  description = "The CA certificate for the AKS cluster"
-  value       = module.aks.cluster_ca_certificate
-  sensitive   = true
+output "aks_cluster_ca_certificates" {
+  description = "Cluster CA certificates of all AKS clusters"
+  value = {
+    for k, m in module.aks :
+    k => m.cluster_ca_certificate
+  }
+  sensitive = true
 }
 
 output "acr_name" {
