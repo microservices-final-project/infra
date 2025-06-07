@@ -43,9 +43,20 @@ jobs:
         id: tf_outputs
         working-directory: terraform/
         run: |
-          echo "aks_cluster_names<<EOF" >> $GITHUB_OUTPUT
-          terraform output -json aks_cluster_names >> $GITHUB_OUTPUT
+          CLUSTER_NAMES=$(terraform output -json aks_cluster_names)
+          echo "cluster_names<<EOF" >> $GITHUB_OUTPUT
+          echo "$CLUSTER_NAMES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+
+          # Debug: mostrar el JSON para verificar
+          echo "🔍 Cluster names JSON:"
+          echo "$CLUSTER_NAMES"
+
+          # Validar que el JSON es válido
+          if ! echo "$CLUSTER_NAMES" | jq empty; then
+            echo "❌ Error: JSON inválido en cluster_names"
+            exit 1
+          fi
 
           echo "acr_name=$(terraform output -raw acr_name)" >> $GITHUB_OUTPUT
           echo "acr_admin_username=$(terraform output -raw acr_admin_username)" >> $GITHUB_OUTPUT
@@ -151,16 +162,23 @@ jobs:
 
       #     echo "🎉 All workflows completed on all branches."
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-        with:
-          version: "latest"
-
       - name: Add ConfigMap and Deploy Zipkin, Service Discovery, and Cloud Config to all clusters
         run: |
           export ACR_NAME="${{ steps.tf_outputs.outputs.acr_name }}"
 
-          echo '${{ steps.tf_outputs.outputs.aks_cluster_names }}' | jq '.' > clusters.json
+          # Crear clusters.json de forma segura
+          echo '${{ steps.tf_outputs.outputs.cluster_names }}' > clusters.json
+
+          # Verificar que el JSON es válido antes de continuar
+          echo "🔍 Verificando clusters.json:"
+          cat clusters.json
+
+          if ! jq empty clusters.json; then
+            echo "❌ Error: JSON inválido en clusters.json"
+            exit 1
+          fi
+
+          echo "✅ JSON válido, procediendo con deployment..."
 
           for cluster in $(jq -r 'keys[]' clusters.json); do
             cluster_name=$(jq -r --arg c "$cluster" '.[$c]' clusters.json)
@@ -175,8 +193,14 @@ jobs:
 
             export ENVIRONMENT="$cluster"
 
+            # Verificar que los archivos existen antes de aplicarlos
             for file in configmap.yaml zipkin.yaml service-discovery.yaml cloud-config.yaml; do
-              envsubst < "./k8s/base/$file" | kubectl apply -f -
+              if [[ -f "./k8s/base/$file" ]]; then
+                echo "📄 Applying $file..."
+                envsubst < "./k8s/base/$file" | kubectl apply -f -
+              else
+                echo "⚠️  Warning: ./k8s/base/$file not found, skipping..."
+              fi
             done
 
             echo "⏳ Esperando 60 segundos para que los servicios estén listos en $cluster_name..."
@@ -187,7 +211,10 @@ jobs:
         run: |
           export ACR_NAME="${{ steps.tf_outputs.outputs.acr_name }}"
 
-          echo '${{ steps.tf_outputs.outputs.aks_cluster_names }}' | jq '.' > clusters.json
+          # Usar el mismo clusters.json del paso anterior
+          if [[ ! -f clusters.json ]]; then
+            echo '${{ steps.tf_outputs.outputs.cluster_names }}' > clusters.json
+          fi
 
           for cluster in $(jq -r 'keys[]' clusters.json); do
             cluster_name=$(jq -r --arg c "$cluster" '.[$c]' clusters.json)
@@ -202,10 +229,19 @@ jobs:
 
             export ENVIRONMENT="$cluster"
 
-            for file in ./k8s/base/*.yaml; do
-              base_file=$(basename "$file")
-              if [[ "$base_file" != "configmap.yaml" && "$base_file" != "zipkin.yaml" && "$base_file" != "service-discovery.yaml" && "$base_file" != "cloud-config.yaml" ]]; then
-                envsubst < "$file" | kubectl apply -f -
-              fi
-            done
+            # Verificar que el directorio existe
+            if [[ -d "./k8s/base/" ]]; then
+              for file in ./k8s/base/*.yaml; do
+                # Verificar que el archivo existe (evitar expansión fallida)
+                if [[ -f "$file" ]]; then
+                  base_file=$(basename "$file")
+                  if [[ "$base_file" != "configmap.yaml" && "$base_file" != "zipkin.yaml" && "$base_file" != "service-discovery.yaml" && "$base_file" != "cloud-config.yaml" ]]; then
+                    echo "📄 Applying $base_file..."
+                    envsubst < "$file" | kubectl apply -f -
+                  fi
+                fi
+              done
+            else
+              echo "⚠️  Warning: ./k8s/base/ directory not found"
+            fi
           done
