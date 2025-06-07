@@ -63,7 +63,7 @@ module "aks" {
   dns_prefix          = each.dns_prefix
   node_count          = each.node_count
   vm_size             = each.vm_size
-  tags                = eacb.tags
+  tags                = each.tags
 }
 
 provider "kubernetes" {
