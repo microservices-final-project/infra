@@ -11,9 +11,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -43,21 +40,6 @@ jobs:
         id: tf_outputs
         working-directory: terraform/
         run: |
-          CLUSTER_NAMES=$(terraform output -json aks_cluster_names)
-          echo "cluster_names<<EOF" >> $GITHUB_OUTPUT
-          echo "$CLUSTER_NAMES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          # Debug: mostrar el JSON para verificar
-          echo "🔍 Cluster names JSON:"
-          echo "$CLUSTER_NAMES"
-
-          # Validar que el JSON es válido
-          if ! echo "$CLUSTER_NAMES" | jq empty; then
-            echo "❌ Error: JSON inválido en cluster_names"
-            exit 1
-          fi
-
           echo "acr_name=$(terraform output -raw acr_name)" >> $GITHUB_OUTPUT
           echo "acr_admin_username=$(terraform output -raw acr_admin_username)" >> $GITHUB_OUTPUT
           echo "acr_admin_password=$(terraform output -raw acr_admin_password)" >> $GITHUB_OUTPUT
@@ -89,159 +71,154 @@ jobs:
           gh secret set ACR_PASSWORD --org microservices-final-project -b "${{ steps.tf_outputs.outputs.acr_admin_password }}" --visibility "all"       
           gh secret set RESOURCE_GROUP --org microservices-final-project -b "${{ steps.tf_outputs.outputs.resource_group_name }}" --visibility "all"
 
-      # - name: Trigger workflows for multiple branches and wait for completion
-      #   run: |
-      #     repos=("service-discovery" "cloud-config" "api-gateway" "proxy-client" "order-service" "payment-service" "product-service" "shipping-service" "user-service" "favourite-service")
-      #     branches=("main" "stage" "develop")
-      #     declare -A run_ids
+      - name: Trigger workflows for multiple branches and wait for completion
+        run: |
+          repos=("service-discovery" "cloud-config" "api-gateway" "proxy-client" "order-service" "payment-service" "product-service" "shipping-service" "user-service" "favourite-service")
+          branches=("main" "stage" "develop")
+          declare -A run_ids
 
-      #     for branch in "${branches[@]}"; do
-      #       echo "🔁 Processing branch: $branch"
-      #       # Step 1: Trigger workflows and collect run IDs
-      #       for repo in "${repos[@]}"; do
-      #         echo "🚀 Triggering build.yml in $repo on branch $branch..."
-      #         gh workflow run build.yml \
-      #           --ref "$branch" \
-      #           --repo microservices-final-project/$repo
+          for branch in "${branches[@]}"; do
+            echo "🔁 Processing branch: $branch"
+            # Step 1: Trigger workflows and collect run IDs
+            for repo in "${repos[@]}"; do
+              echo "🚀 Triggering build.yml in $repo on branch $branch..."
+              gh workflow run build.yml \
+                --ref "$branch" \
+                --repo microservices-final-project/$repo
 
-      #         # Small delay to allow the run to register
-      #         sleep 5
+              # Small delay to allow the run to register
+              sleep 5
 
-      #         # Get the latest run ID for build.yml on the current branch
-      #         run_id=$(gh run list \
-      #           --repo microservices-final-project/$repo \
-      #           --workflow=build.yml \
-      #           --branch="$branch" \
-      #           --limit 1 \
-      #           --json databaseId \
-      #           --jq '.[0].databaseId')
+              # Get the latest run ID for build.yml on the current branch
+              run_id=$(gh run list \
+                --repo microservices-final-project/$repo \
+                --workflow=build.yml \
+                --branch="$branch" \
+                --limit 1 \
+                --json databaseId \
+                --jq '.[0].databaseId')
 
-      #         if [[ -n "$run_id" ]]; then
-      #           run_ids["$repo-$branch"]=$run_id
-      #           echo "✅ $repo [$branch] run ID: $run_id"
-      #         else
-      #           echo "❌ Could not get run ID for $repo on branch $branch"
-      #         fi
-      #       done
-      #     done
+              if [[ -n "$run_id" ]]; then
+                run_ids["$repo-$branch"]=$run_id
+                echo "✅ $repo [$branch] run ID: $run_id"
+              else
+                echo "❌ Could not get run ID for $repo on branch $branch"
+              fi
+            done
+          done
 
-      #     echo ""
-      #     echo "⏳ Waiting for all workflows to complete..."
-      #     all_done=false
+          echo ""
+          echo "⏳ Waiting for all workflows to complete..."
+          all_done=false
 
-      #     # Step 2: Poll until all runs are completed
-      #     while [ "$all_done" == "false" ]; do
-      #       all_done=true
-      #       for key in "${!run_ids[@]}"; do
-      #         repo=${key%-*}
-      #         branch=${key#*-}
-      #         run_id=${run_ids[$key]}
+          # Step 2: Poll until all runs are completed
+          while [ "$all_done" == "false" ]; do
+            all_done=true
+            for key in "${!run_ids[@]}"; do
+              repo=${key%-*}
+              branch=${key#*-}
+              run_id=${run_ids[$key]}
 
-      #         status=$(gh run view "$run_id" \
-      #           --repo microservices-final-project/$repo \
-      #           --json status,conclusion \
-      #           --jq '.status')
+              status=$(gh run view "$run_id" \
+                --repo microservices-final-project/$repo \
+                --json status,conclusion \
+                --jq '.status')
 
-      #         if [[ "$status" != "completed" ]]; then
-      #           echo "⏱️  $repo [$branch] is still running..."
-      #           all_done=false
-      #         else
-      #           conclusion=$(gh run view "$run_id" \
-      #             --repo microservices-final-project/$repo \
-      #             --json status,conclusion \
-      #             --jq '.conclusion')
-      #           echo "✅ $repo [$branch] finished with status: $conclusion"
-      #         fi
-      #       done
+              if [[ "$status" != "completed" ]]; then
+                echo "⏱️  $repo [$branch] is still running..."
+                all_done=false
+              else
+                conclusion=$(gh run view "$run_id" \
+                  --repo microservices-final-project/$repo \
+                  --json status,conclusion \
+                  --jq '.conclusion')
+                echo "✅ $repo [$branch] finished with status: $conclusion"
+              fi
+            done
 
-      #       if [ "$all_done" == "false" ]; then
-      #         echo "🔁 Waiting 15s before next check..."
-      #         sleep 15
-      #       fi
-      #     done
+            if [ "$all_done" == "false" ]; then
+              echo "🔁 Waiting 15s before next check..."
+              sleep 15
+            fi
+          done
 
-      #     echo "🎉 All workflows completed on all branches."
+          echo "🎉 All workflows completed on all branches."
 
-      - name: Add ConfigMap and Deploy Zipkin, Service Discovery, and Cloud Config to all clusters
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: "latest"
+
+      - name: Attach ACR to each AKS cluster
+        run: |
+          aks_names=("microservices-cluster-dev" "microservices-cluster-stage")
+
+          for cluster_name in "${aks_names[@]}"; do
+            echo "🔗 Attaching ACR to cluster: $cluster_name"
+
+            az aks update \
+              --resource-group "${{ steps.tf_outputs.outputs.resource_group_name }}" \
+              --name "$cluster_name" \
+              --attach-acr "${{ steps.tf_outputs.outputs.acr_name }}"
+          done
+
+      - name: Add ConfigMap and Deploy Zipkin, Service Discovery, and Cloud Config
         run: |
           export ACR_NAME="${{ steps.tf_outputs.outputs.acr_name }}"
 
-          # Crear clusters.json de forma segura
-          echo '${{ steps.tf_outputs.outputs.cluster_names }}' > clusters.json
+          # Mapear cluster a entorno
+          declare -A env_map=(
+            ["microservices-cluster-dev"]="dev"
+            ["microservices-cluster-stage"]="stage"
+          )
 
-          # Verificar que el JSON es válido antes de continuar
-          echo "🔍 Verificando clusters.json:"
-          cat clusters.json
+          aks_names=("microservices-cluster-dev" "microservices-cluster-stage")
 
-          if ! jq empty clusters.json; then
-            echo "❌ Error: JSON inválido en clusters.json"
-            exit 1
-          fi
-
-          echo "✅ JSON válido, procediendo con deployment..."
-
-          for cluster in $(jq -r 'keys[]' clusters.json); do
-            cluster_name=$(jq -r --arg c "$cluster" '.[$c]' clusters.json)
-            echo "🔧 Switching context to cluster: $cluster_name (Environment: $cluster)"
+          for cluster_name in "${aks_names[@]}"; do
+            echo "🔧 Switching context to cluster: $cluster_name"
 
             az aks get-credentials \
               --resource-group "${{ steps.tf_outputs.outputs.resource_group_name }}" \
               --name "$cluster_name" \
               --overwrite-existing
 
-            echo "🚀 Applying base services to cluster: $cluster_name"
+            export ENV="${env_map[$cluster_name]}"
+            echo "🚀 Deploying initial services to: $cluster_name (ENV=$ENV)"
 
-            export ENVIRONMENT="$cluster"
-
-            # Verificar que los archivos existen antes de aplicarlos
             for file in configmap.yaml zipkin.yaml service-discovery.yaml cloud-config.yaml; do
-              if [[ -f "./k8s/base/$file" ]]; then
-                echo "📄 Applying $file..."
-                envsubst < "./k8s/base/$file" | kubectl apply -f -
-              else
-                echo "⚠️  Warning: ./k8s/base/$file not found, skipping..."
-              fi
+              envsubst < "./k8s/base/$file" | kubectl apply -f -
             done
 
             echo "⏳ Esperando 60 segundos para que los servicios estén listos en $cluster_name..."
             sleep 60
           done
 
-      - name: Deploy Remaining Services to all clusters
+      - name: Deploy Remaining Services
         run: |
           export ACR_NAME="${{ steps.tf_outputs.outputs.acr_name }}"
 
-          # Usar el mismo clusters.json del paso anterior
-          if [[ ! -f clusters.json ]]; then
-            echo '${{ steps.tf_outputs.outputs.cluster_names }}' > clusters.json
-          fi
+          declare -A env_map=(
+            ["microservices-cluster-dev"]="dev"
+            ["microservices-cluster-stage"]="stage"
+          )
 
-          for cluster in $(jq -r 'keys[]' clusters.json); do
-            cluster_name=$(jq -r --arg c "$cluster" '.[$c]' clusters.json)
-            echo "🔧 Switching context to cluster: $cluster_name (Environment: $cluster)"
+          aks_names=("microservices-cluster-dev" "microservices-cluster-stage")
+
+          for cluster_name in "${aks_names[@]}"; do
+            echo "🔧 Switching context to cluster: $cluster_name"
 
             az aks get-credentials \
               --resource-group "${{ steps.tf_outputs.outputs.resource_group_name }}" \
               --name "$cluster_name" \
               --overwrite-existing
 
-            echo "🚀 Applying remaining services to cluster: $cluster_name"
+            export ENV="${env_map[$cluster_name]}"
+            echo "🚀 Deploying remaining services to: $cluster_name (ENV=$ENV)"
 
-            export ENVIRONMENT="$cluster"
-
-            # Verificar que el directorio existe
-            if [[ -d "./k8s/base/" ]]; then
-              for file in ./k8s/base/*.yaml; do
-                # Verificar que el archivo existe (evitar expansión fallida)
-                if [[ -f "$file" ]]; then
-                  base_file=$(basename "$file")
-                  if [[ "$base_file" != "configmap.yaml" && "$base_file" != "zipkin.yaml" && "$base_file" != "service-discovery.yaml" && "$base_file" != "cloud-config.yaml" ]]; then
-                    echo "📄 Applying $base_file..."
-                    envsubst < "$file" | kubectl apply -f -
-                  fi
-                fi
-              done
-            else
-              echo "⚠️  Warning: ./k8s/base/ directory not found"
-            fi
+            for file in ./k8s/base/*.yaml; do
+              base_file=$(basename "$file")
+              if [[ "$base_file" != "configmap.yaml" && "$base_file" != "zipkin.yaml" && "$base_file" != "service-discovery.yaml" && "$base_file" != "cloud-config.yaml" ]]; then
+                envsubst < "$file" | kubectl apply -f -
+              fi
+            done
           done
