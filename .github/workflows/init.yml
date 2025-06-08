@@ -193,6 +193,24 @@ jobs:
             sleep 60
           done
 
+      - name: Deploy MySQL only to Stage Cluster
+        run: |
+          echo "🔧 Switching context to cluster: microservices-cluster-stage"
+
+          az aks get-credentials \
+            --resource-group "${{ steps.tf_outputs.outputs.resource_group_name }}" \
+            --name "microservices-cluster-stage" \
+            --overwrite-existing
+
+          echo "🚀 Deploying MySQL secret and deployment to: microservices-cluster-stage (ENV=stage)"
+
+          for file in mysql-secret.yaml mysql.yaml; do
+            envsubst < "./k8s/base/$file" | kubectl apply -f -
+          done
+
+          sleep 30
+
+
       - name: Deploy Remaining Services
         run: |
           export ACR_NAME="${{ steps.tf_outputs.outputs.acr_name }}"

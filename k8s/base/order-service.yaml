@@ -24,6 +24,11 @@ spec:
               value: optional:configserver:http://cloud-config:9296/
             - name: EUREKA_INSTANCE_HOSTNAME
               value: order-service
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-root-password
           envFrom:
             - configMapRef:
                 name: common-environment-variables
