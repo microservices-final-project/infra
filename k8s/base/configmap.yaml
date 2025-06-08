@@ -17,3 +17,5 @@ data:
   EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
   SPRING_PROFILES_ACTIVE: ${ENV}
   SPRING_ZIPKIN_BASE_URL: "http://zipkin:9411"
+  SPRING_DATASOURCE_URL: "jdbc:mysql://mysql-service:3306/ecommerce_stage_db"
+  SPRING_DATASOURCE_USERNAME: "root"
