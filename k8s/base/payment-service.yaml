@@ -33,6 +33,7 @@ spec:
             - configMapRef:
                 name: common-environment-variables
           image: ${ACR_NAME}.azurecr.io/payment-service:${ENV}
+          imagePullPolicy: Always
           name: payment-service
           ports:
             - containerPort: 8400

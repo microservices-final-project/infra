@@ -33,6 +33,7 @@ spec:
             - configMapRef:
                 name: common-environment-variables
           image: ${ACR_NAME}.azurecr.io/product-service:${ENV}
+          imagePullPolicy: Always
           name: product-service
           ports:
             - containerPort: 8500

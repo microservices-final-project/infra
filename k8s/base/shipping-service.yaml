@@ -33,6 +33,7 @@ spec:
             - configMapRef:
                 name: common-environment-variables
           image: ${ACR_NAME}.azurecr.io/shipping-service:${ENV}
+          imagePullPolicy: Always
           name: shipping-service
           ports:
             - containerPort: 8600
