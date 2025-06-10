@@ -33,6 +33,7 @@ spec:
             - configMapRef:
                 name: common-environment-variables
           image: ${ACR_NAME}.azurecr.io/order-service:${ENV}
+          imagePullPolicy: Always
           name: order-service
           ports:
             - containerPort: 8300

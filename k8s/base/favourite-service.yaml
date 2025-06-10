@@ -33,6 +33,7 @@ spec:
             - configMapRef:
                 name: common-environment-variables
           image: ${ACR_NAME}.azurecr.io/favourite-service:${ENV}
+          imagePullPolicy: Always
           name: favourite-service
           ports:
             - containerPort: 8800
