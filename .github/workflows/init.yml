@@ -149,18 +149,18 @@ jobs:
         with:
           version: "latest"
 
-      - name: Attach ACR to each AKS cluster
-        run: |
-          aks_names=("microservices-cluster-dev" "microservices-cluster-stage")
+      # - name: Attach ACR to each AKS cluster
+      #   run: |
+      #     aks_names=("microservices-cluster-dev" "microservices-cluster-stage")
 
-          for cluster_name in "${aks_names[@]}"; do
-            echo "🔗 Attaching ACR to cluster: $cluster_name"
+      #     for cluster_name in "${aks_names[@]}"; do
+      #       echo "🔗 Attaching ACR to cluster: $cluster_name"
 
-            az aks update \
-              --resource-group "${{ steps.tf_outputs.outputs.resource_group_name }}" \
-              --name "$cluster_name" \
-              --attach-acr "${{ steps.tf_outputs.outputs.acr_name }}"
-          done
+      #       az aks update \
+      #         --resource-group "${{ steps.tf_outputs.outputs.resource_group_name }}" \
+      #         --name "$cluster_name" \
+      #         --attach-acr "${{ steps.tf_outputs.outputs.acr_name }}"
+      #     done
 
       - name: Add ConfigMap and Deploy Zipkin, Service Discovery, and Cloud Config
         run: |
