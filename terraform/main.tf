@@ -38,7 +38,7 @@ module "aks" {
       cluster_name = "${var.cluster_name}-stage"
       dns_prefix   = "${var.dns_prefix}-stage"
       node_count   = 2
-      vm_size      = "Standard_B2s"
+      vm_size      = "Standard_D2s_v3"
       tags = {
         environment = "stage"
         project     = "microservices"
