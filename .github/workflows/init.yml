@@ -162,7 +162,7 @@ jobs:
               --attach-acr "${{ steps.tf_outputs.outputs.acr_name }}"
           done
 
-      - name: Add ConfigMap and Deploy Zipkin, Service Discovery, and Cloud Config
+      - name: Add ConfigMap and Deploy Zipkin, Service Discovery, Redis Cache and Cloud Config
         run: |
           export ACR_NAME="${{ steps.tf_outputs.outputs.acr_name }}"
 
@@ -184,7 +184,7 @@ jobs:
             export ENV="${env_map[$cluster_name]}"
             echo "🚀 Deploying initial services to: $cluster_name (ENV=$ENV)"
 
-            for file in configmap.yaml zipkin.yaml service-discovery.yaml cloud-config.yaml; do
+            for file in redis-cache.yaml configmap.yaml zipkin.yaml service-discovery.yaml cloud-config.yaml; do
               envsubst < "./k8s/base/$file" | kubectl apply -f -
             done
 
@@ -232,7 +232,7 @@ jobs:
 
             for file in ./k8s/base/*.yaml; do
               base_file=$(basename "$file")
-              if [[ "$base_file" != "mysql-secret.yaml" && "$base_file" != "mysql.yaml" && "$base_file" != "configmap.yaml" && "$base_file" != "zipkin.yaml" && "$base_file" != "service-discovery.yaml" && "$base_file" != "cloud-config.yaml" ]]; then
+              if [[ "$base_file" != "redis-cache.yaml" && "$base_file" != "mysql-secret.yaml" && "$base_file" != "mysql.yaml" && "$base_file" != "configmap.yaml" && "$base_file" != "zipkin.yaml" && "$base_file" != "service-discovery.yaml" && "$base_file" != "cloud-config.yaml" ]]; then
                 envsubst < "$file" | kubectl apply -f -
               fi
             done
