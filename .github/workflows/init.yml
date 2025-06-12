@@ -74,7 +74,7 @@ jobs:
       - name: Trigger workflows for multiple branches and wait for completion
         run: |
           repos=("service-discovery" "cloud-config" "api-gateway" "proxy-client" "order-service" "payment-service" "product-service" "shipping-service" "user-service" "favourite-service")
-          branches=("main" "stage" "develop")
+          branches=("stage")
           declare -A run_ids
 
           for branch in "${branches[@]}"; do
@@ -149,18 +149,18 @@ jobs:
         with:
           version: "latest"
 
-      # - name: Attach ACR to each AKS cluster
-      #   run: |
-      #     aks_names=("microservices-cluster-dev" "microservices-cluster-stage")
+      - name: Attach ACR to each AKS cluster
+        run: |
+          aks_names=("microservices-cluster-dev" "microservices-cluster-stage")
 
-      #     for cluster_name in "${aks_names[@]}"; do
-      #       echo "🔗 Attaching ACR to cluster: $cluster_name"
+          for cluster_name in "${aks_names[@]}"; do
+            echo "🔗 Attaching ACR to cluster: $cluster_name"
 
-      #       az aks update \
-      #         --resource-group "${{ steps.tf_outputs.outputs.resource_group_name }}" \
-      #         --name "$cluster_name" \
-      #         --attach-acr "${{ steps.tf_outputs.outputs.acr_name }}"
-      #     done
+            az aks update \
+              --resource-group "${{ steps.tf_outputs.outputs.resource_group_name }}" \
+              --name "$cluster_name" \
+              --attach-acr "${{ steps.tf_outputs.outputs.acr_name }}"
+          done
 
       - name: Add ConfigMap and Deploy Zipkin, Service Discovery, and Cloud Config
         run: |
@@ -168,11 +168,10 @@ jobs:
 
           # Mapear cluster a entorno
           declare -A env_map=(
-            ["microservices-cluster-dev"]="dev"
             ["microservices-cluster-stage"]="stage"
           )
 
-          aks_names=("microservices-cluster-dev" "microservices-cluster-stage")
+          aks_names=("microservices-cluster-stage")
 
           for cluster_name in "${aks_names[@]}"; do
             echo "🔧 Switching context to cluster: $cluster_name"
@@ -210,17 +209,15 @@ jobs:
 
           sleep 30
 
-
       - name: Deploy Remaining Services
         run: |
           export ACR_NAME="${{ steps.tf_outputs.outputs.acr_name }}"
 
           declare -A env_map=(
-            ["microservices-cluster-dev"]="dev"
             ["microservices-cluster-stage"]="stage"
           )
 
-          aks_names=("microservices-cluster-dev" "microservices-cluster-stage")
+          aks_names=("microservices-cluster-stage")
 
           for cluster_name in "${aks_names[@]}"; do
             echo "🔧 Switching context to cluster: $cluster_name"
@@ -239,4 +236,18 @@ jobs:
                 envsubst < "$file" | kubectl apply -f -
               fi
             done
+          done
+
+      - name: Get devops AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group "${{ steps.tf_outputs.outputs.resource_group_name }}" \
+            --name "microservices-cluster-devops" \
+            --overwrite-existing
+
+      - name: Deploy devops apps
+        run: |
+          for file in sonarqube-data-pvc.yaml sonarqube.yaml; do
+            echo "Applying $file..."
+            kubectl apply -f "./k8s/devops/$file"
           done
