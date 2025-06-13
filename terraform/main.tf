@@ -21,17 +21,17 @@ module "aks" {
 
   for_each = {
 
-    dev = {
-      location     = "West US"
-      cluster_name = "${var.cluster_name}-dev"
-      dns_prefix   = "${var.dns_prefix}-dev"
-      node_count   = 2
-      vm_size      = "Standard_DS2_v2"
-      tags = {
-        environment = "dev"
-        project     = "microservices"
-      }
-    }
+    # dev = {
+    #   location     = "West US"
+    #   cluster_name = "${var.cluster_name}-dev"
+    #   dns_prefix   = "${var.dns_prefix}-dev"
+    #   node_count   = 2
+    #   vm_size      = "Standard_DS2_v2"
+    #   tags = {
+    #     environment = "dev"
+    #     project     = "microservices"
+    #   }
+    # }
 
     stage = {
       location     = "East US"
@@ -45,17 +45,17 @@ module "aks" {
       }
     }
 
-    # prod = {
-    #   location     = "East US 2"
-    #   cluster_name = "${var.cluster_name}-prod"
-    #   dns_prefix   = "${var.dns_prefix}-prod"
-    #   node_count   = 2
-    #   vm_size      = "Standard_DS2_v2"
-    #   tags = {
-    #     environment = "prod"
-    #     project     = "microservices"
-    #   }
-    # }
+    prod = {
+      location     = "East US 2"
+      cluster_name = "${var.cluster_name}-prod"
+      dns_prefix   = "${var.dns_prefix}-prod"
+      node_count   = 2
+      vm_size      = "Standard_D2s_v3"
+      tags = {
+        environment = "prod"
+        project     = "microservices"
+      }
+    }
 
     devops = {
       location     = "West US 2"

@@ -10,12 +10,62 @@ data:
       scrape_interval: 15s
 
     scrape_configs:
-      - job_name: 'user-service-dev'
+      - job_name: 'user-service-main'
         metrics_path: /user-service/actuator/prometheus
         static_configs:
-          - targets: ["${API_GATEWAY_IP_DEV}:8080"]
+          - targets: ["${API_GATEWAY_IP_MAIN}:8080"]
 
       - job_name: 'user-service-stage'
         metrics_path: /user-service/actuator/prometheus
+        static_configs:
+          - targets: ["${API_GATEWAY_IP_STAGE}:8080"]
+
+      - job_name: 'order-service-main'
+        metrics_path: /order-service/actuator/prometheus
+        static_configs:
+          - targets: ["${API_GATEWAY_IP_MAIN}:8080"]
+
+      - job_name: 'order-service-stage'
+        metrics_path: /order-service/actuator/prometheus
+        static_configs:
+          - targets: ["${API_GATEWAY_IP_STAGE}:8080"]
+
+      - job_name: 'payment-service-main'
+        metrics_path: /payment-service/actuator/prometheus
+        static_configs:
+          - targets: ["${API_GATEWAY_IP_MAIN}:8080"]
+
+      - job_name: 'payment-service-stage'
+        metrics_path: /payment-service/actuator/prometheus
+        static_configs:
+          - targets: ["${API_GATEWAY_IP_STAGE}:8080"]
+
+      - job_name: 'product-service-main'
+        metrics_path: /product-service/actuator/prometheus
+        static_configs:
+          - targets: ["${API_GATEWAY_IP_MAIN}:8080"]
+
+      - job_name: 'product-service-stage'
+        metrics_path: /product-service/actuator/prometheus
+        static_configs:
+          - targets: ["${API_GATEWAY_IP_STAGE}:8080"]
+
+      - job_name: 'shipping-service-main'
+        metrics_path: /shipping-service/actuator/prometheus
+        static_configs:
+          - targets: ["${API_GATEWAY_IP_MAIN}:8080"]
+
+      - job_name: 'shipping-service-stage'
+        metrics_path: /shipping-service/actuator/prometheus
+        static_configs:
+          - targets: ["${API_GATEWAY_IP_STAGE}:8080"]
+
+      - job_name: 'favourite-service-main'
+        metrics_path: /favourite-service/actuator/prometheus
+        static_configs:
+          - targets: ["${API_GATEWAY_IP_MAIN}:8080"]
+
+      - job_name: 'favourite-service-stage'
+        metrics_path: /favourite-service/actuator/prometheus
         static_configs:
           - targets: ["${API_GATEWAY_IP_STAGE}:8080"]
