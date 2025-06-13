@@ -26,6 +26,7 @@ spec:
             - configMapRef:
                 name: common-environment-variables
           image: ${ACR_NAME}.azurecr.io/cloud-config:${ENV}
+          imagePullPolicy: Always
           name: cloud-config
           ports:
             - containerPort: 9296

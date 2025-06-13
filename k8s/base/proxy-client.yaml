@@ -29,6 +29,7 @@ spec:
                 name: common-environment-variables
           name: proxy-client
           image: ${ACR_NAME}.azurecr.io/proxy-client:${ENV}
+          imagePullPolicy: Always
           ports:
             - containerPort: 8900
           resources:
