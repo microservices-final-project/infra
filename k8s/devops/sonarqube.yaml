@@ -52,7 +52,7 @@ metadata:
   labels:
     app: sonarqube
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - port: 9000
       targetPort: 9000

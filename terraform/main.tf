@@ -21,17 +21,17 @@ module "aks" {
 
   for_each = {
 
-    # dev = {
-    #   location     = "West US"
-    #   cluster_name = "${var.cluster_name}-dev"
-    #   dns_prefix   = "${var.dns_prefix}-dev"
-    #   node_count   = 2
-    #   vm_size      = "Standard_B2s"
-    #   tags = {
-    #     environment = "dev"
-    #     project     = "microservices"
-    #   }
-    # }
+    dev = {
+      location     = "West US"
+      cluster_name = "${var.cluster_name}-dev"
+      dns_prefix   = "${var.dns_prefix}-dev"
+      node_count   = 2
+      vm_size      = "Standard_D2s_v3"
+      tags = {
+        environment = "dev"
+        project     = "microservices"
+      }
+    }
 
     stage = {
       location     = "East US"
@@ -62,7 +62,7 @@ module "aks" {
       cluster_name = "${var.cluster_name}-devops"
       dns_prefix   = "${var.dns_prefix}-devops"
       node_count   = 2
-      vm_size      = "Standard_B2s"
+      vm_size      = "Standard_D2s_v3"
       tags = {
         environment = "devops"
         project     = "microservices"

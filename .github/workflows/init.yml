@@ -168,10 +168,11 @@ jobs:
 
           # Mapear cluster a entorno
           declare -A env_map=(
+            ["microservices-cluster-dev"]="dev"
             ["microservices-cluster-stage"]="stage"
           )
 
-          aks_names=("microservices-cluster-stage")
+          aks_names=("microservices-cluster-dev" "microservices-cluster-stage")
 
           for cluster_name in "${aks_names[@]}"; do
             echo "🔧 Switching context to cluster: $cluster_name"
@@ -214,10 +215,11 @@ jobs:
           export ACR_NAME="${{ steps.tf_outputs.outputs.acr_name }}"
 
           declare -A env_map=(
+            ["microservices-cluster-dev"]="dev"
             ["microservices-cluster-stage"]="stage"
           )
 
-          aks_names=("microservices-cluster-stage")
+          aks_names=("microservices-cluster-dev" "microservices-cluster-stage")
 
           for cluster_name in "${aks_names[@]}"; do
             echo "🔧 Switching context to cluster: $cluster_name"
@@ -236,6 +238,25 @@ jobs:
                 envsubst < "$file" | kubectl apply -f -
               fi
             done
+
+            echo "🌐 Esperando a que se asigne IP pública al API Gateway ($ENV)..."
+            for i in {1..10}; do
+              IP=$(kubectl get svc api-gateway -n $ENV -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+              if [[ -n "$IP" ]]; then
+                break
+              fi
+              echo "⏳ Intento $i: esperando IP..."
+              sleep 10
+            done
+
+            if [[ -z "$IP" ]]; then
+              echo "❌ No se pudo obtener IP del API Gateway en $ENV"
+              exit 1
+            fi
+
+            export API_GATEWAY_IP_UPPER=$(echo "$ENV" | tr '[:lower:]' '[:upper:]')
+            export API_GATEWAY_IP_VAR="API_GATEWAY_IP_$API_GATEWAY_IP_UPPER"
+            echo "$API_GATEWAY_IP_VAR=$IP" >> $GITHUB_ENV
           done
 
       - name: Get devops AKS credentials
@@ -245,9 +266,13 @@ jobs:
             --name "microservices-cluster-devops" \
             --overwrite-existing
 
+      - name: Generate Prometheus config
+        run: |
+          envsubst < ./k8s/devops/prometheus.template.yaml > ./k8s/devops/prometheus.yaml
+
       - name: Deploy devops apps
         run: |
-          for file in sonarqube-data-pvc.yaml sonarqube.yaml; do
+          for file in sonarqube-data-pvc.yaml sonarqube.yaml prometheus.yaml grafana.yaml ; do
             echo "Applying $file..."
             kubectl apply -f "./k8s/devops/$file"
           done
