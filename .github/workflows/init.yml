@@ -71,78 +71,78 @@ jobs:
           gh secret set ACR_PASSWORD --org microservices-final-project -b "${{ steps.tf_outputs.outputs.acr_admin_password }}" --visibility "all"       
           gh secret set RESOURCE_GROUP --org microservices-final-project -b "${{ steps.tf_outputs.outputs.resource_group_name }}" --visibility "all"
 
-      - name: Trigger workflows for multiple branches and wait for completion
-        run: |
-          repos=("service-discovery" "cloud-config" "api-gateway" "proxy-client" "order-service" "payment-service" "product-service" "shipping-service" "user-service" "favourite-service")
-          branches=("stage")
-          declare -A run_ids
+      # - name: Trigger workflows for multiple branches and wait for completion
+      #   run: |
+      #     repos=("service-discovery" "cloud-config" "api-gateway" "proxy-client" "order-service" "payment-service" "product-service" "shipping-service" "user-service" "favourite-service")
+      #     branches=("stage")
+      #     declare -A run_ids
 
-          for branch in "${branches[@]}"; do
-            echo "🔁 Processing branch: $branch"
-            # Step 1: Trigger workflows and collect run IDs
-            for repo in "${repos[@]}"; do
-              echo "🚀 Triggering build.yml in $repo on branch $branch..."
-              gh workflow run build.yml \
-                --ref "$branch" \
-                --repo microservices-final-project/$repo
+      #     for branch in "${branches[@]}"; do
+      #       echo "🔁 Processing branch: $branch"
+      #       # Step 1: Trigger workflows and collect run IDs
+      #       for repo in "${repos[@]}"; do
+      #         echo "🚀 Triggering build.yml in $repo on branch $branch..."
+      #         gh workflow run build.yml \
+      #           --ref "$branch" \
+      #           --repo microservices-final-project/$repo
 
-              # Small delay to allow the run to register
-              sleep 5
+      #         # Small delay to allow the run to register
+      #         sleep 5
 
-              # Get the latest run ID for build.yml on the current branch
-              run_id=$(gh run list \
-                --repo microservices-final-project/$repo \
-                --workflow=build.yml \
-                --branch="$branch" \
-                --limit 1 \
-                --json databaseId \
-                --jq '.[0].databaseId')
+      #         # Get the latest run ID for build.yml on the current branch
+      #         run_id=$(gh run list \
+      #           --repo microservices-final-project/$repo \
+      #           --workflow=build.yml \
+      #           --branch="$branch" \
+      #           --limit 1 \
+      #           --json databaseId \
+      #           --jq '.[0].databaseId')
 
-              if [[ -n "$run_id" ]]; then
-                run_ids["$repo-$branch"]=$run_id
-                echo "✅ $repo [$branch] run ID: $run_id"
-              else
-                echo "❌ Could not get run ID for $repo on branch $branch"
-              fi
-            done
-          done
+      #         if [[ -n "$run_id" ]]; then
+      #           run_ids["$repo-$branch"]=$run_id
+      #           echo "✅ $repo [$branch] run ID: $run_id"
+      #         else
+      #           echo "❌ Could not get run ID for $repo on branch $branch"
+      #         fi
+      #       done
+      #     done
 
-          echo ""
-          echo "⏳ Waiting for all workflows to complete..."
-          all_done=false
+      #     echo ""
+      #     echo "⏳ Waiting for all workflows to complete..."
+      #     all_done=false
 
-          # Step 2: Poll until all runs are completed
-          while [ "$all_done" == "false" ]; do
-            all_done=true
-            for key in "${!run_ids[@]}"; do
-              repo=${key%-*}
-              branch=${key#*-}
-              run_id=${run_ids[$key]}
+      #     # Step 2: Poll until all runs are completed
+      #     while [ "$all_done" == "false" ]; do
+      #       all_done=true
+      #       for key in "${!run_ids[@]}"; do
+      #         repo=${key%-*}
+      #         branch=${key#*-}
+      #         run_id=${run_ids[$key]}
 
-              status=$(gh run view "$run_id" \
-                --repo microservices-final-project/$repo \
-                --json status,conclusion \
-                --jq '.status')
+      #         status=$(gh run view "$run_id" \
+      #           --repo microservices-final-project/$repo \
+      #           --json status,conclusion \
+      #           --jq '.status')
 
-              if [[ "$status" != "completed" ]]; then
-                echo "⏱️  $repo [$branch] is still running..."
-                all_done=false
-              else
-                conclusion=$(gh run view "$run_id" \
-                  --repo microservices-final-project/$repo \
-                  --json status,conclusion \
-                  --jq '.conclusion')
-                echo "✅ $repo [$branch] finished with status: $conclusion"
-              fi
-            done
+      #         if [[ "$status" != "completed" ]]; then
+      #           echo "⏱️  $repo [$branch] is still running..."
+      #           all_done=false
+      #         else
+      #           conclusion=$(gh run view "$run_id" \
+      #             --repo microservices-final-project/$repo \
+      #             --json status,conclusion \
+      #             --jq '.conclusion')
+      #           echo "✅ $repo [$branch] finished with status: $conclusion"
+      #         fi
+      #       done
 
-            if [ "$all_done" == "false" ]; then
-              echo "🔁 Waiting 15s before next check..."
-              sleep 15
-            fi
-          done
+      #       if [ "$all_done" == "false" ]; then
+      #         echo "🔁 Waiting 15s before next check..."
+      #         sleep 15
+      #       fi
+      #     done
 
-          echo "🎉 All workflows completed on all branches."
+      #     echo "🎉 All workflows completed on all branches."
 
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
@@ -241,7 +241,7 @@ jobs:
 
             echo "🌐 Esperando a que se asigne IP pública al API Gateway ($ENV)..."
             for i in {1..10}; do
-              IP=$(kubectl get svc api-gateway -n $ENV -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+              IP=$(kubectl get svc api-gateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
               if [[ -n "$IP" ]]; then
                 break
               fi
