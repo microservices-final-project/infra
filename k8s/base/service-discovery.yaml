@@ -73,7 +73,7 @@ metadata:
     io.kompose.service: service-discovery
   name: service-discovery
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - name: "8761"
       port: 8761
