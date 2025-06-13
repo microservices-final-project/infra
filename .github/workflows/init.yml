@@ -241,7 +241,7 @@ jobs:
 
             echo "🌐 Esperando a que se asigne IP pública al API Gateway ($ENV)..."
             for i in {1..10}; do
-              IP=$(kubectl get svc api-gateway -n $ENV -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+              IP=$(kubectl get svc api-gateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
               if [[ -n "$IP" ]]; then
                 break
               fi
